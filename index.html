@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MeetLink</title>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231A6FD4'/><circle cx='10' cy='13' r='3.5' fill='white'/><circle cx='22' cy='13' r='3.5' fill='white'/><path d='M4 26c0-3.5 2.8-6 6-6h12c3.2 0 6 2.5 6 6' stroke='white' stroke-width='2' stroke-linecap='round' fill='none'/></svg>" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --blue: #1A6FD4; --blue-hover: #155bb5; --blue-bg: #EBF3FF;
+      --bg: #F5F6F8; --surface: #FFFFFF; --surface2: #F0F2F5; --surface3: #E8EAED;
+      --border: rgba(0,0,0,0.09); --border2: rgba(0,0,0,0.16);
+      --text: #1A1A2E; --text2: #52546A; --text3: #9496A8;
+      --radius: 10px; --radius-lg: 14px; --radius-xl: 18px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);
+      --active: #F59E0B;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #13141A; --surface: #1E1F27; --surface2: #282933; --surface3: #32333F;
+        --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
+        --text: #EEEEF3; --text2: #9496A8; --text3: #5A5C70;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --shadow: 0 4px 12px rgba(0,0,0,0.3);
+        --blue-bg: rgba(26,111,212,0.15);
+      }
+    }
+    body { font-family: 'Heebo', sans-serif; direction: rtl; text-align: right; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; font-size: 15px; }
+    .app-shell { max-width: 860px; margin: 0 auto; padding: 0 1rem 2rem; }
+
+    /* TOP BAR */
+    .topbar { position: sticky; top: 0; z-index: 100; background: rgba(245,246,248,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; margin: 0 -1rem 1.5rem; }
+    @media (prefers-color-scheme: dark) { .topbar { background: rgba(19,20,26,0.92); } }
+    .topbar-inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-logo { width: 36px; height: 36px; background: var(--blue); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .brand-logo svg { width: 20px; height: 20px; }
+    .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .topbar-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    /* VIEW TABS */
+    .view-tabs { display: flex; background: var(--surface2); border-radius: 9px; padding: 3px; gap: 2px; }
+    .view-tab { padding: 6px 13px; border-radius: 7px; border: none; background: transparent; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; display: flex; align-items: center; gap: 5px; }
+    .view-tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+    .view-tab svg { width: 14px; height: 14px; }
+
+    /* BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; border-radius: var(--radius); font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border2); background: var(--surface); color: var(--text); white-space: nowrap; }
+    .btn:hover { background: var(--surface2); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--blue); color: white; border-color: var(--blue); }
+    .btn-primary:hover { background: var(--blue-hover); border-color: var(--blue-hover); }
+    .btn-icon { width: 30px; height: 30px; padding: 0; border-radius: 7px; border: none; background: transparent; cursor: pointer; color: var(--text2); transition: all 0.12s; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-icon:hover { background: var(--surface2); }
+    .btn-icon.danger:hover { background: #FDEEEE; color: #C0392B; }
+
+    /* SEARCH */
+    .search-wrap { position: relative; margin-bottom: 1.25rem; }
+    .search-input { width: 100%; padding: 10px 40px 10px 14px; border: 1px solid var(--border2); border-radius: var(--radius); background: var(--surface); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 14px; outline: none; transition: border 0.15s, box-shadow 0.15s; box-shadow: var(--shadow-sm); }
+    .search-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,111,212,0.15); }
+    .search-icon { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); color: var(--text3); pointer-events: none; }
+    .search-icon svg { width: 16px; height: 16px; }
+    .search-hint { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text3); background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; pointer-events: none; }
+
+    /* LEGEND */
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; font-size: 12px; color: var(--text2); }
+    .legend-label { font-weight: 600; color: var(--text3); }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+    /* COURSE CARDS */
+    .courses-list { display: flex; flex-direction: column; gap: 10px; }
+    .course-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); transition: box-shadow 0.15s; }
+    .course-card:hover { box-shadow: var(--shadow); }
+    .course-header { display: flex; align-items: center; gap: 11px; padding: 13px 15px; cursor: pointer; user-select: none; }
+    .course-stripe { width: 4px; height: 34px; border-radius: 2px; flex-shrink: 0; }
+    .course-name { font-size: 15px; font-weight: 600; flex: 1; }
+    .course-pill { font-size: 11px; color: var(--text3); background: var(--surface2); padding: 2px 8px; border-radius: 20px; }
+    .course-btns { display: flex; gap: 2px; align-items: center; }
+    .course-edit-hint { font-size: 11px; color: var(--text3); margin-left: 6px; white-space: nowrap; }
+    .course-card:hover .course-edit-hint { opacity: 0; }
+    .course-chevron { color: var(--text3); font-size: 11px; transition: transform 0.2s; margin-right: 2px; }
+    .course-chevron.open { transform: rotate(180deg); }
+
+    /* LINKS */
+    .links-body { border-top: 1px solid var(--border); padding: 6px 8px 8px; }
+    .link-row { display: flex; align-items: flex-start; gap: 9px; padding: 8px 7px; border-radius: 8px; transition: background 0.12s; }
+    .link-row:hover { background: var(--surface2); }
+    .type-icon { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+    .type-lecture { background: var(--blue-bg); }
+    .type-tirgul  { background: #EAF7EE; }
+    .type-sadna   { background: #FDEEF5; }
+    .type-other   { background: var(--surface2); }
+    @media (prefers-color-scheme: dark) {
+      .type-tirgul { background: rgba(67,160,71,0.15); }
+      .type-sadna  { background: rgba(194,24,91,0.15); }
+    }
+    .link-info { flex: 1; min-width: 0; }
+    .link-title { font-size: 13px; font-weight: 500; }
+    .link-slots { margin-top: 3px; display: flex; flex-direction: column; gap: 2px; }
+    .link-slot-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text3); }
+    .link-note { font-size: 11px; color: var(--text3); margin-top: 2px; }
+    .link-actions { display: flex; gap: 2px; opacity: 0; transition: opacity 0.12s; flex-shrink: 0; }
+    .link-row:hover .link-actions { opacity: 1; }
+    .link-btns { display: flex; align-items: center; gap: 5px; flex-shrink: 0; align-self: center; }
+    .open-btn { display: inline-flex; align-items: center; gap: 4px; padding: 6px 13px; border-radius: 7px; background: var(--blue); color: white; font-family: 'Heebo', sans-serif; font-size: 12px; font-weight: 500; text-decoration: none; transition: background 0.12s; }
+    .open-btn:hover { background: var(--blue-hover); }
+    .pwd-btn { display: inline-flex; align-items: center; gap: 3px; padding: 6px 10px; border-radius: 7px; background: var(--surface2); color: var(--text2); font-family: 'Heebo', sans-serif; font-size: 12px; font-weight: 500; border: 1px solid var(--border2); cursor: pointer; transition: all 0.12s; white-space: nowrap; }
+    .pwd-btn:hover { background: #FEF3C7; border-color: #F59E0B; color: #92400E; }
+    .add-link-btn { width: 100%; padding: 8px; border: 1px dashed var(--border2); border-radius: 7px; background: transparent; color: var(--text3); font-family: 'Heebo', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.12s; margin-top: 4px; }
+    .add-link-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+    .no-links { padding: 10px 8px; color: var(--text3); font-size: 12px; }
+
+    /* EMPTY STATE */
+    .empty-state { text-align: center; padding: 4rem 1rem; color: var(--text3); }
+    .empty-icon { font-size: 48px; opacity: 0.35; margin-bottom: 12px; }
+    .empty-state h3 { font-size: 16px; font-weight: 500; color: var(--text2); margin-bottom: 6px; }
+    .empty-state p { font-size: 13px; }
+
+    /* SCHEDULE */
+    .sched-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 8px; }
+    .day-nav { display: none; align-items: center; gap: 8px; }
+    .day-nav-btn { padding: 5px 12px; border-radius: 7px; border: 1px solid var(--border2); background: var(--surface); font-family: 'Heebo', sans-serif; font-size: 13px; cursor: pointer; color: var(--text); }
+    .day-nav-btn:hover { background: var(--surface2); }
+    .day-nav-label { font-size: 14px; font-weight: 600; min-width: 60px; text-align: center; }
+    /* NEXT UP */
+    .nextup-now { background: #1A6FD4; color: white; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .nextup-soon { background: #FEF3C7; color: #92400E; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .nextup-label { font-size: 12px; font-weight: 600; opacity: 0.8; white-space: nowrap; }
+    .nextup-name { font-size: 15px; font-weight: 700; flex: 1; }
+    .nextup-time { font-size: 13px; opacity: 0.85; white-space: nowrap; }
+    .nextup-btn { padding: 8px 18px; border-radius: 8px; border: none; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .nextup-btn-enter { background: white; color: #1A6FD4; }
+    .nextup-btn-soon  { background: #F59E0B; color: white; }
+    @keyframes jump { 0%,100%{transform:scale(1);} 40%{transform:scale(1.08);} 70%{transform:scale(0.97);} }
+    .btn-jumping { animation: jump 0.8s ease infinite; }
+    @media (max-width: 600px) { .day-nav { display: flex; } .toggle-mobile-btn { display: inline-flex !important; } }
+    .toggle-mobile-btn { display: none; }
+    .sched-wrap { overflow-x: auto; border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+    table.sched { width: 100%; border-collapse: collapse; min-width: 580px; table-layout: fixed; background: var(--surface); }
+    table.sched.mobile-single { min-width: unset; }
+    table.sched thead th { background: var(--surface2); padding: 10px 6px; text-align: center; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--border); color: var(--text2); }
+    table.sched thead th:first-child { width: 52px; }
+    table.sched td { border: 1px solid var(--border); padding: 0; vertical-align: top; height: 56px; }
+    .time-cell { text-align: center; font-size: 11px; color: var(--text3); padding-top: 7px; background: var(--surface2); font-weight: 500; }
+    /* Conflict layout: multiple events side by side */
+    .td-events { display: flex; height: 100%; min-height: 54px; }
+    .sched-block { display: flex; flex-direction: column; gap: 1px; flex: 1; min-height: 54px; padding: 5px 6px; text-decoration: none; transition: filter 0.12s; }
+    .sched-block:hover { filter: brightness(0.9); }
+    .sched-block + .sched-block { border-right: 1px solid rgba(255,255,255,0.3); }
+    .sched-block.dur-90  { min-height: 108px; }
+    .sched-block.dur-120 { min-height: 160px; }
+    .sched-block.dur-150 { min-height: 210px; }
+    .sched-block.dur-180 { min-height: 260px; }
+    /* Active class highlight */
+    .sched-block.is-active { outline: 2.5px solid var(--active); outline-offset: -2px; animation: pulse-border 2s ease-in-out infinite; }
+
+    .ev-lecture { background: #1A6FD4; color: white; }
+    .ev-tirgul  { background: #43A047; color: white; }
+    .ev-sadna   { background: #C2185B; color: white; }
+    .ev-other   { background: #546E7A; color: white; }
+    .sb-course { font-size: 12px; font-weight: 700; line-height: 1.3; color: inherit; }
+    .sb-type   { font-size: 12.5px; opacity: 0.9; color: inherit; }
+    .sb-room, .sb-dur, .sb-now, .sb-enter { font-size: 11px; opacity: 0.85; color: inherit; }
+    .sb-now    { font-weight: 700; color: #FCD34D; }
+    .sb-enter  { text-decoration: underline; margin-top: auto; }
+    .sched-hint { font-size: 12px; color: var(--text3); text-align: center; margin-top: 8px; }
+
+    /* MODAL */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
+    .modal { background: var(--surface); border-radius: var(--radius-xl); padding: 1.5rem; width: 100%; max-width: 460px; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; }
+    .modal-title { font-size: 16px; font-weight: 700; }
+    .modal-close { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--surface2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; color: var(--text2); }
+    .modal-close:hover { background: var(--surface3); }
+    .form-group { margin-bottom: 13px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; }
+    .form-control { width: 100%; padding: 9px 11px; border: 1px solid var(--border2); border-radius: 8px; background: var(--surface); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 13px; outline: none; transition: border 0.12s, box-shadow 0.12s; }
+    .form-control:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(26,111,212,0.13); }
+    textarea.form-control { resize: vertical; min-height: 60px; }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .color-picker { display: flex; gap: 7px; flex-wrap: wrap; }
+    .color-dot { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.12s, border-color 0.12s; }
+    .color-dot.selected { border-color: var(--text); transform: scale(1.18); }
+    .modal-footer { display: flex; gap: 8px; margin-top: 1.25rem; }
+
+    /* SLOTS */
+    .slots-section { margin-bottom: 13px; }
+    .slots-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .slot-row { background: var(--surface2); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; position: relative; }
+    .slot-row-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .slot-remove { position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; border-radius: 50%; border: none; background: transparent; color: var(--text3); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.12s; }
+    .slot-remove:hover { background: #FDEEEE; color: #C0392B; }
+    .slot-label { font-size: 11px; font-weight: 600; color: var(--text3); margin-bottom: 4px; }
+    .slot-control { width: 100%; padding: 7px 9px; border: 1px solid var(--border2); border-radius: 7px; background: var(--surface); color: var(--text); font-family: 'Heebo', sans-serif; font-size: 12px; outline: none; }
+    .slot-control:focus { border-color: var(--blue); }
+    .add-slot-btn { width: 100%; padding: 7px; border: 1px dashed var(--border2); border-radius: 7px; background: transparent; color: var(--text3); font-family: 'Heebo', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.12s; }
+    .add-slot-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-bg); }
+
+    /* TOAST */
+    #toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--surface); padding: 9px 18px; border-radius: 9px; font-size: 13px; font-weight: 500; z-index: 2000; opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none; white-space: nowrap; box-shadow: var(--shadow); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+    /* FOOTER */
+    .app-footer { max-width: 860px; margin: 0 auto; padding: 1.5rem 1rem 2rem; text-align: right; }
+    .app-footer p { font-size: 11px; color: var(--text3); line-height: 1.8; }
+    .app-footer a { color: var(--text3); text-decoration: none; border-bottom: 1px solid var(--border2); }
+    .app-footer a:hover { color: var(--text2); }
+
+    /* NEXT UP */
+    .nextup-now { background: #1A6FD4; color: white; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .nextup-soon { background: #FEF3C7; color: #92400E; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .nextup-label { font-size: 12px; font-weight: 600; opacity: 0.8; white-space: nowrap; }
+    .nextup-name { font-size: 15px; font-weight: 700; flex: 1; }
+    .nextup-time { font-size: 13px; opacity: 0.85; white-space: nowrap; }
+    .nextup-btn { padding: 8px 18px; border-radius: 8px; border: none; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .nextup-btn-enter { background: white; color: #1A6FD4; }
+    .nextup-btn-soon  { background: #F59E0B; color: white; }
+    @keyframes jump { 0%,100%{transform:scale(1);} 40%{transform:scale(1.08);} 70%{transform:scale(0.97);} }
+    .btn-jumping { animation: jump 0.8s ease infinite; }
+    @media (max-width: 600px) {
+      .brand-name { display: none; }
+      .topbar-actions { gap: 4px; }
+      .view-tab span { display: none; }
+      .btn span { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="12" r="4" fill="white" opacity="0.95"/>
+            <circle cx="21" cy="12" r="4" fill="white" opacity="0.95"/>
+            <path d="M4 24c0-4 3.134-7 7-7h10c3.866 0 7 3 7 7" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+            <circle cx="16" cy="26" r="2.5" fill="white" opacity="0.5"/>
+          </svg>
+        </div>
+        <span class="brand-name">MeetLink</span>
+      </div>
+      <div class="topbar-actions">
+        <div class="view-tabs">
+          <button class="view-tab" id="tabList" onclick="setView('list')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            <span>רשימה</span>
+          </button>
+          <button class="view-tab" id="tabSched" onclick="setView('schedule')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>מערכת</span>
+          </button>
+        </div>
+        <button class="btn" onclick="exportData()" title="ייצוא גיבוי">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>ייצוא</span>
+        </button>
+        <button class="btn" onclick="document.getElementById('importFile').click()" title="ייבוא גיבוי">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>ייבוא</span>
+        </button>
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
+        <button class="btn btn-primary" onclick="openModal('course')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>קורס חדש</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NEXT UP WIDGET -->
+  <div id="nextUpBar" style="display:none;margin-bottom:1rem;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)">
+    <div id="nextUpInner"></div>
+  </div>
+
+  <!-- LIST VIEW -->
+  <div id="listView" style="display:none">
+    <div class="search-wrap">
+      <div class="search-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <input class="search-input" type="text" id="searchInput" placeholder="חיפוש קורס, קישור, מרצה..." oninput="renderList()" />
+      <span class="search-hint">/</span>
+    </div>
+    <div class="legend">
+      <span class="legend-label">סוג שיעור:</span>
+      <div class="legend-item"><div class="legend-dot" style="background:#1A6FD4"></div>הרצאה</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#43A047"></div>תרגול</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#C2185B"></div>סדנה</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#546E7A"></div>אחר</div>
+    </div>
+    <div class="courses-list" id="coursesList"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <div class="empty-icon">📡</div>
+      <h3>אין קורסים עדיין</h3>
+      <p>לחץ על "קורס חדש" כדי להתחיל לארגן את הקישורים שלך</p>
+    </div>
+  </div>
+
+  <!-- SCHEDULE VIEW -->
+  <div id="scheduleView" style="display:none">
+    <div class="sched-top">
+      <div class="legend" style="margin-bottom:0">
+        <span class="legend-label">סוג שיעור:</span>
+        <div class="legend-item"><div class="legend-dot" style="background:#1A6FD4"></div>הרצאה</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#43A047"></div>תרגול</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#C2185B"></div>סדנה</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#F59E0B;border-radius:50%;width:8px;height:8px"></div>עכשיו</div>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn toggle-mobile-btn" id="toggleMobileBtn" onclick="toggleMobileView()" style="font-size:12px">יום בודד</button>
+        <div class="day-nav" id="dayNav">
+          <button class="day-nav-btn" onclick="prevDay()">→ הקודם</button>
+          <span class="day-nav-label" id="dayNavLabel"></span>
+          <button class="day-nav-btn" onclick="nextDay()">הבא ←</button>
+        </div>
+      </div>
+    </div>
+    <div class="sched-wrap">
+      <table class="sched" id="schedTable"></table>
+    </div>
+    <div id="schedEmpty" style="display:none;text-align:center;padding:3rem 1rem;color:var(--text3)">
+      <div style="font-size:36px;opacity:.3;margin-bottom:10px">🗓️</div>
+      <p style="font-weight:500;color:var(--text2)">אין קישורים עם יום ושעה</p>
+      <p style="font-size:13px;margin-top:4px">ערוך קישור והוסף לו זמני שיעור כדי שיופיע כאן</p>
+    </div>
+
+    <p class="sched-hint">לחץ על שיעור לכניסה ישירה · קישורים ללא זמן מוגדר לא יופיעו כאן</p>
+  </div>
+</div>
+
+<footer class="app-footer">
+  <p>© 2026 · <a href="https://www.linkedin.com/in/amit-gabbay-7709b2351/" target="_blank" rel="noopener">עמית גבאי</a> · כל הזכויות שמורות · שימוש אישי בלבד · הוכן בעזרת <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a></p>
+</footer>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle"></span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalContent"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  /* ── Constants ── */
+  const COLORS = ['#1A6FD4','#2ECC71','#E67E22','#9B59B6','#E74C3C','#1ABC9C','#F39C12','#3498DB','#E91E63','#607D8B'];
+  const DAYS   = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
+  const TIMES  = ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
+  const DUR_OPTS = [
+    {v:'',l:'— ללא —'},{v:'60',l:'60 דקות (שעה)'},{v:'90',l:'90 דקות (שעה וחצי)'},
+    {v:'120',l:'120 דקות (שעתיים)'},{v:'150',l:'150 דקות (שעתיים וחצי)'},
+    {v:'180',l:'180 דקות (שלוש שעות)'},{v:'custom',l:'התאמה אישית...'},
+  ];
+  const TYPE = {
+    lecture: { label:'הרצאה', icon:'📖', evCls:'ev-lecture', badgeCls:'type-lecture' },
+    tirgul:  { label:'תרגול',  icon:'✏️',  evCls:'ev-tirgul',  badgeCls:'type-tirgul'  },
+    sadna:   { label:'סדנה',   icon:'🛠️', evCls:'ev-sadna',   badgeCls:'type-sadna'   },
+    other:   { label:'אחר',    icon:'🔗',  evCls:'ev-other',   badgeCls:'type-other'   },
+  };
+  const SK = 'zoom_v3';
+  const DAY_MAP = { 0:'ראשון', 1:'שני', 2:'שלישי', 3:'רביעי', 4:'חמישי', 5:'שישי', 6:'שבת' };
+
+  /* ── State ── */
+  let state      = { courses: [], expanded: {} };
+  let editTarget = null;
+  let curView    = 'list';
+  let mobileView = false;
+  let mobileDay  = 0; // index into usedDays
+
+  /* ── Storage ── */
+  function load() {
+    try {
+      const raw = localStorage.getItem(SK);
+      if (raw) state = JSON.parse(raw);
+      if (!state.courses)  state.courses  = [];
+      if (!state.expanded) state.expanded = {};
+      const oldRaw = localStorage.getItem('zoomCoursesApp_v4');
+      if (oldRaw) {
+        const old = JSON.parse(oldRaw);
+        if (old.courses) {
+          const ids = new Set(state.courses.map(c => c.id));
+          old.courses.forEach(c => { if (!ids.has(c.id)) state.courses.push(c); });
+          Object.assign(state.expanded, old.expanded || {});
+        }
+        localStorage.removeItem('zoomCoursesApp_v4');
+      }
+      state.courses.forEach(c => {
+        if (!c.links) c.links = [];
+        c.links.forEach(l => {
+          if (!l.type) l.type = 'lecture';
+          if (!l.slots) {
+            l.slots = (l.day || l.time) ? [{ day: l.day||'', time: l.time||'', duration: l.duration||0 }] : [];
+            delete l.day; delete l.time; delete l.duration;
+          }
+        });
+      });
+    } catch(e) { state = { courses: [], expanded: {} }; }
+  }
+  function save() { try { localStorage.setItem(SK, JSON.stringify(state)); } catch(e) {} }
+
+  /* ── Export / Import ── */
+  function exportData() {
+    const json = JSON.stringify({ version: 1, courses: state.courses }, null, 2);
+    const encoded = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+    const a = document.createElement('a');
+    a.href = encoded;
+    a.download = 'meetlink-backup.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    toast('הגיבוי הורד ✓');
+  }
+  function importData(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const incoming = data.courses || (Array.isArray(data) ? data : null);
+        if (!incoming) { alert('קובץ לא תקין'); return; }
+        if (!confirm(`ייבוא ${incoming.length} קורסים. קורסים קיימים עם אותו ID לא יידרסו — קורסים חדשים יתווספו. להמשיך?`)) return;
+        const ids = new Set(state.courses.map(c => c.id));
+        incoming.forEach(c => { if (!ids.has(c.id)) state.courses.push(c); });
+        save();
+        if (curView === 'list') renderList(); else renderSchedule();
+        toast(`יובאו קורסים בהצלחה ✓`);
+      } catch(err) { alert('שגיאה בקריאת הקובץ'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  /* ── Helpers ── */
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(t._to); t._to = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  /* ── Password extraction ── */
+  function extractPwd(url) {
+    try {
+      const u = new URL(url);
+      return u.searchParams.get('pwd') || null;
+    } catch(e) { return null; }
+  }
+  function copyPwd(pwd) {
+    navigator.clipboard.writeText(pwd).then(() => toast('הסיסמה הועתקה ✓')).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = pwd; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      toast('הסיסמה הועתקה ✓');
+    });
+  }
+
+  /* ── Smart icon detection ── */
+  function detectIcon(url, defaultType) {
+    if (!url) return TYPE[defaultType]?.icon || '🔗';
+    const u = url.toLowerCase();
+    if (u.includes('panopto')) return '🎬';
+    if (u.includes('youtube.com') || u.includes('youtu.be')) return '▶️';
+    if (u.includes('zoom.us')) return TYPE[defaultType]?.icon || '🔗';
+    return TYPE[defaultType]?.icon || '🔗';
+  }
+
+  /* ── Active class detection ── */
+  function isActiveNow(day, time, duration) {
+    const now = new Date();
+    const todayDay = DAY_MAP[now.getDay()];
+    if (day !== todayDay) return false;
+    const [h, m] = time.split(':').map(Number);
+    const startMins = h * 60 + m;
+    const endMins   = startMins + (duration || 90);
+    const nowMins   = now.getHours() * 60 + now.getMinutes();
+    return nowMins >= startMins && nowMins < endMins;
+  }
+
+  /* ── View switching ── */
+  function setView(v) {
+    curView = v;
+    document.getElementById('listView').style.display     = v === 'list'     ? '' : 'none';
+    document.getElementById('scheduleView').style.display = v === 'schedule' ? '' : 'none';
+    document.getElementById('tabList').classList.toggle('active',  v === 'list');
+    document.getElementById('tabSched').classList.toggle('active', v === 'schedule');
+    if (v === 'list')     { renderList(); updateNextUp(); }
+    if (v === 'schedule') renderSchedule();
+  }
+
+  /* ── Mobile schedule toggle ── */
+  function toggleMobileView() {
+    mobileView = !mobileView;
+    document.getElementById('toggleMobileBtn').textContent = mobileView ? 'כל הימים' : 'יום בודד';
+    document.getElementById('dayNav').style.display = mobileView ? 'flex' : 'none';
+    renderSchedule();
+  }
+  function prevDay() { mobileDay = Math.max(0, mobileDay - 1); renderSchedule(); }
+  function nextDay() { mobileDay++; renderSchedule(); }
+
+  /* ════════════ LIST VIEW ════════════ */
+  function renderList() {
+    const q         = document.getElementById('searchInput').value.trim().toLowerCase();
+    const container = document.getElementById('coursesList');
+    const empty     = document.getElementById('emptyState');
+    let courses = state.courses;
+    if (q) {
+      courses = courses.map(c => {
+        if (c.name.toLowerCase().includes(q)) return c;
+        const fl = c.links.filter(l => l.title.toLowerCase().includes(q) || (l.note||'').toLowerCase().includes(q) || (l.room||'').toLowerCase().includes(q));
+        return fl.length ? { ...c, links: fl } : null;
+      }).filter(Boolean);
+    }
+    if (!courses.length) { container.innerHTML = ''; empty.style.display = ''; return; }
+    empty.style.display = 'none';
+    container.innerHTML = courses.map(renderCourseCard).join('');
+  }
+
+  const SVG_EDIT   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+  const SVG_DELETE = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`;
+
+  function renderCourseCard(c) {
+    const open = !!state.expanded[c.id];
+    return `
+      <div class="course-card">
+        <div class="course-header" onclick="toggleCourse('${c.id}')">
+          <div class="course-stripe" style="background:${c.color}"></div>
+          <span class="course-name">${esc(c.name)}</span>
+          <span class="course-pill">${c.links.length} קישורים</span>
+          <div class="course-btns" onclick="event.stopPropagation()">
+            <span class="course-edit-hint">✏️ ריחוף לעריכה</span>
+            <button class="btn-icon" onclick="openModal('course','${c.id}')">${SVG_EDIT}</button>
+            <button class="btn-icon danger" onclick="deleteCourse('${c.id}')">${SVG_DELETE}</button>
+          </div>
+          <span class="course-chevron ${open?'open':''}">▾</span>
+        </div>
+        ${open ? `
+          <div class="links-body">
+            ${c.links.length ? c.links.map(l => renderLinkRow(l, c.id)).join('') : '<div class="no-links">אין קישורים עדיין</div>'}
+            <button class="add-link-btn" onclick="openModal('link','${c.id}')">+ הוספת קישור</button>
+          </div>` : ''}
+      </div>`;
+  }
+
+  function renderLinkRow(l, cid) {
+    const tm    = TYPE[l.type] || TYPE.other;
+    const icon  = detectIcon(l.url, l.type);
+    const slots = (l.slots || []).filter(s => s.day || s.time);
+    const pwd   = extractPwd(l.url);
+    const slotsHtml = slots.length
+      ? `<div class="link-slots">${slots.map(s => `<span class="link-slot-tag">📅 ${s.day}${s.time?' · '+s.time:''}${s.duration?' · '+s.duration+' דק\'':''}</span>`).join('')}</div>`
+      : '';
+    return `
+      <div class="link-row">
+        <div class="type-icon ${tm.badgeCls}">${icon}</div>
+        <div class="link-info">
+          <div class="link-title">${esc(l.title)} <span style="font-size:11px;font-weight:400;color:var(--text3)">${tm.label}</span></div>
+          ${slotsHtml}
+          ${l.room ? `<div class="link-note">📍 ${esc(l.room)}</div>` : ''}
+          ${l.note ? `<div class="link-note">${esc(l.note)}</div>` : ''}
+        </div>
+        <div class="link-actions">
+          <button class="btn-icon" onclick="openModal('link','${cid}','${l.id}')">${SVG_EDIT}</button>
+          <button class="btn-icon danger" onclick="deleteLink('${cid}','${l.id}')">${SVG_DELETE}</button>
+        </div>
+        <div class="link-btns">
+          ${pwd ? `<button class="pwd-btn" onclick="copyPwd('${esc(pwd)}')" title="העתק סיסמה">🔑 סיסמה</button>` : ''}
+          <a class="open-btn" href="${esc(l.url)}" target="_blank" rel="noopener">
+            כניסה
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>`;
+  }
+
+  function toggleCourse(id) { state.expanded[id] = !state.expanded[id]; save(); renderList(); }
+
+  /* ════════════ SCHEDULE VIEW ════════════ */
+  function renderSchedule() {
+    const tbl = document.getElementById('schedTable');
+    const allEvents = [];
+    state.courses.forEach(c => {
+      c.links.forEach(l => {
+        (l.slots || []).forEach(s => {
+          if (s.day && s.time) allEvents.push({ ...l, courseName: c.name, day: s.day, time: s.time, duration: s.duration || 0 });
+        });
+      });
+    });
+    const schedEmpty = document.getElementById('schedEmpty');
+    if (!allEvents.length) { tbl.innerHTML = ''; schedEmpty.style.display = ''; return; }
+    schedEmpty.style.display = 'none';
+
+    const dayOrder = ['ראשון','שני','שלישי','רביעי','חמישי','שישי'];
+    let usedDays   = dayOrder.filter(d => allEvents.some(e => e.day === d));
+    const usedTimes = [...new Set(allEvents.map(e => e.time))].sort();
+
+    // Mobile single-day mode
+    if (mobileView) {
+      mobileDay = Math.min(mobileDay, usedDays.length - 1);
+      document.getElementById('dayNavLabel').textContent = usedDays[mobileDay] || '';
+      usedDays = [usedDays[mobileDay]].filter(Boolean);
+      tbl.classList.add('mobile-single');
+    } else {
+      tbl.classList.remove('mobile-single');
+    }
+
+    const grid = {};
+    usedTimes.forEach(t => { grid[t] = {}; usedDays.forEach(d => grid[t][d] = []); });
+    allEvents.forEach(e => { if (grid[e.time] && grid[e.time][e.day] !== undefined) grid[e.time][e.day].push(e); });
+
+    let html = `
+      <colgroup><col style="width:52px">${usedDays.map(() => '<col>').join('')}</colgroup>
+      <thead><tr><th></th>${usedDays.map(d => `<th>${d}</th>`).join('')}</tr></thead>
+      <tbody>`;
+
+    usedTimes.forEach(t => {
+      html += `<tr><td class="time-cell">${t}</td>`;
+      usedDays.forEach(d => {
+        const evs = grid[t][d];
+        if (!evs.length) { html += `<td></td>`; return; }
+        // Conflict: multiple events side by side
+        html += `<td style="padding:0"><div class="td-events">`;
+        evs.forEach(ev => {
+          const tm = TYPE[ev.type] || TYPE.other;
+          const icon = detectIcon(ev.url, ev.type);
+          const durClass = ev.duration >= 180 ? 'dur-180' : ev.duration >= 150 ? 'dur-150' : ev.duration >= 120 ? 'dur-120' : ev.duration >= 90 ? 'dur-90' : '';
+          const durStyle = ev.duration > 180 ? `min-height:${Math.round(ev.duration/60*108)}px` : '';
+          const active   = isActiveNow(ev.day, ev.time, ev.duration);
+          html += `<a class="sched-block ${tm.evCls} ${durClass} ${active?'is-active':''}" href="${esc(ev.url)}" target="_blank" rel="noopener" ${durStyle?`style="${durStyle}"`:''}>
+            <span class="sb-course">${esc(ev.courseName)}</span>
+            <span class="sb-type">${icon} ${tm.label}</span>
+            ${ev.room ? `<span class="sb-room">📍 ${esc(ev.room)}</span>` : ''}
+            ${ev.duration ? `<span class="sb-dur">⏱ ${ev.duration} דק׳</span>` : ''}
+            ${active ? `<span class="sb-now">● עכשיו</span>` : ''}
+            <span class="sb-enter">לחץ לכניסה ←</span>
+          </a>`;
+        });
+        html += `</div></td>`;
+      });
+      html += `</tr>`;
+    });
+
+    html += `</tbody>`;
+    tbl.innerHTML = html;
+  }
+
+  // Refresh every minute
+  setInterval(() => {
+    if (curView === 'schedule') renderSchedule();
+    updateNextUp();
+  }, 60000);
+
+  /* ── Next Up ── */
+  function getAllEvents() {
+    const evs = [];
+    state.courses.forEach(c => {
+      c.links.forEach(l => {
+        (l.slots||[]).forEach(s => {
+          if (s.day && s.time) evs.push({ ...l, courseName: c.name, day: s.day, time: s.time, duration: s.duration||90 });
+        });
+      });
+    });
+    return evs;
+  }
+
+  function timeToMins(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+
+  function updateNextUp() {
+    const bar = document.getElementById('nextUpBar');
+    const inner = document.getElementById('nextUpInner');
+    const now = new Date();
+    const todayHe = DAY_MAP[now.getDay()];
+    const nowMins = now.getHours()*60+now.getMinutes();
+    const evs = getAllEvents();
+
+    // Find current class
+    const current = evs.find(e => e.day===todayHe && nowMins >= timeToMins(e.time) && nowMins < timeToMins(e.time)+e.duration);
+    if (current) {
+      const endMins = timeToMins(current.time)+current.duration;
+      const rem = endMins-nowMins;
+      bar.style.display='';
+      inner.innerHTML = `<div class="nextup-now">
+        <span class="nextup-label">● מתקיים עכשיו</span>
+        <span class="nextup-name">${esc(current.courseName)} — ${esc(current.title)}</span>
+        <span class="nextup-time">נותרו ${rem} דק'</span>
+        <a class="nextup-btn nextup-btn-enter" href="${esc(current.url)}" target="_blank" rel="noopener">כניסה לשיעור ←</a>
+      </div>`;
+      return;
+    }
+
+    // Find next class today
+    const todayEvs = evs.filter(e => e.day===todayHe && timeToMins(e.time) > nowMins)
+      .sort((a,b) => timeToMins(a.time)-timeToMins(b.time));
+    if (todayEvs.length) {
+      const next = todayEvs[0];
+      const diff = timeToMins(next.time)-nowMins;
+      const soon = diff <= 10;
+      bar.style.display='';
+      inner.innerHTML = `<div class="${soon?'nextup-soon':'nextup-now'}" style="${soon?'':'opacity:0.85'}">
+        <span class="nextup-label">${soon?'⏰ בקרוב':'הבא'}</span>
+        <span class="nextup-name">${esc(next.courseName)} — ${esc(next.title)}</span>
+        <span class="nextup-time">בשעה ${next.time} (בעוד ${diff} דק')</span>
+        ${soon ? `<a class="nextup-btn nextup-btn-soon btn-jumping" href="${esc(next.url)}" target="_blank" rel="noopener">כניסה ←</a>` : ''}
+      </div>`;
+      return;
+    }
+
+    bar.style.display='none';
+  }
+
+  
+  /* ════════════ SLOTS UI ════════════ */
+  let modalSlots = [];
+
+  function slotHtml(s, i) {
+    const dayOpts  = DAYS.map(d  => `<option value="${d}" ${s.day===d?'selected':''}>${d}</option>`).join('');
+    const timeOpts = TIMES.map(t => `<option value="${t}" ${s.time===t?'selected':''}>${t}</option>`).join('');
+    const durVal   = String(s.duration || '');
+    const isCustom = durVal && !DUR_OPTS.find(o => o.v === durVal && o.v !== '' && o.v !== 'custom');
+    const durOpts  = DUR_OPTS.map(o => `<option value="${o.v}" ${(!isCustom&&o.v===durVal)||((!durVal)&&o.v==='')?'selected':''}>${o.l}</option>`).join('');
+    return `
+      <div class="slot-row" id="slot-${i}">
+        <button class="slot-remove" onclick="removeSlot(${i})">×</button>
+        <div class="slot-row-inner">
+          <div>
+            <div class="slot-label">יום</div>
+            <select class="slot-control" onchange="updateSlot(${i},'day',this.value)">
+              <option value="">— ללא —</option>${dayOpts}
+            </select>
+          </div>
+          <div>
+            <div class="slot-label">שעה</div>
+            <select class="slot-control" onchange="updateSlot(${i},'time',this.value)">
+              <option value="">— ללא —</option>${timeOpts}
+            </select>
+          </div>
+          <div>
+            <div class="slot-label">משך</div>
+            <select class="slot-control" id="dur-preset-${i}" onchange="updateSlotDur(${i},this.value)">${durOpts}</select>
+          </div>
+          <div id="dur-custom-wrap-${i}" style="${isCustom?'':'display:none'}">
+            <div class="slot-label">דקות (מותאם)</div>
+            <input class="slot-control" type="number" min="15" max="360" step="15" value="${isCustom?durVal:''}" placeholder="דקות" oninput="updateSlot(${i},'duration',parseInt(this.value)||0)" />
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderSlots() {
+    document.getElementById('slotsContainer').innerHTML =
+      modalSlots.map((s,i) => slotHtml(s,i)).join('') +
+      `<button class="add-slot-btn" onclick="addSlot()">+ הוספת זמן נוסף</button>`;
+  }
+  function addSlot() { modalSlots.push({ day:'', time:'', duration:0 }); renderSlots(); }
+  function removeSlot(i) { modalSlots.splice(i,1); renderSlots(); }
+  function updateSlot(i, field, val) { modalSlots[i][field] = val; }
+  function updateSlotDur(i, val) {
+    const w = document.getElementById(`dur-custom-wrap-${i}`);
+    if (val === 'custom') { w.style.display = ''; modalSlots[i].duration = 0; }
+    else { w.style.display = 'none'; modalSlots[i].duration = parseInt(val) || 0; }
+  }
+
+  /* ════════════ MODALS ════════════ */
+  function openModal(type, courseId, linkId) {
+    editTarget = { type, courseId, linkId };
+    document.getElementById('modalOverlay').style.display = 'flex';
+    const title   = document.getElementById('modalTitle');
+    const content = document.getElementById('modalContent');
+    const footer  = document.getElementById('modalFooter');
+
+    if (type === 'course') {
+      const ex = courseId ? state.courses.find(c => c.id === courseId) : null;
+      const selColor = ex ? ex.color : COLORS[state.courses.length % COLORS.length];
+      title.textContent = ex ? 'עריכת קורס' : 'קורס חדש';
+      content.innerHTML = `
+        <div class="form-group">
+          <label>שם הקורס</label>
+          <input class="form-control" id="f_name" value="${ex?esc(ex.name):''}" placeholder="לדוגמה: אלגוריתמים ומבני נתונים" />
+        </div>
+        <div class="form-group">
+          <label>צבע מזהה</label>
+          <div class="color-picker">${COLORS.map(c=>`<div class="color-dot ${c===selColor?'selected':''}" style="background:${c}" data-color="${c}" onclick="selectColor(this)"></div>`).join('')}</div>
+        </div>`;
+      footer.innerHTML = `<button class="btn btn-primary" onclick="saveCourse()">שמירה</button><button class="btn" onclick="closeModal()">ביטול</button>`;
+
+    } else {
+      const course = state.courses.find(c => c.id === courseId);
+      const ex     = linkId ? course.links.find(l => l.id === linkId) : null;
+      title.textContent = ex ? 'עריכת קישור' : 'קישור חדש';
+      modalSlots = ex && ex.slots ? JSON.parse(JSON.stringify(ex.slots)) : [{ day:'', time:'', duration:0 }];
+      content.innerHTML = `
+        <div class="form-group">
+          <label>כותרת</label>
+          <input class="form-control" id="f_title" value="${ex?esc(ex.title):''}" placeholder="לדוגמה: הרצאה שבועית" oninput="autoDetectType(this.value)" />
+        </div>
+        <div class="form-group">
+          <label>קישור</label>
+          <input class="form-control" id="f_url" type="url" value="${ex?esc(ex.url):''}" placeholder="https://zoom.us/j/... או Panopto / YouTube" />
+        </div>
+        <div class="form-group">
+          <label>סוג שיעור</label>
+          <select class="form-control" id="f_type">
+            ${Object.entries(TYPE).map(([k,v])=>`<option value="${k}" ${ex&&ex.type===k?'selected':''}>${v.icon} ${v.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="slots-section">
+          <div class="slots-label">
+            <span>זמני השיעור</span>
+            <span style="font-size:11px;font-weight:400;color:var(--text3)">ניתן להוסיף מספר זמנים לאותו קישור</span>
+          </div>
+          <div id="slotsContainer"></div>
+        </div>
+        <div class="form-group">
+          <label>חדר / מיקום</label>
+          <input class="form-control" id="f_room" value="${ex?esc(ex.room||''):''}" placeholder="לדוגמה: אולמן 603 / זום" />
+        </div>
+        <div class="form-group">
+          <label>הערות</label>
+          <textarea class="form-control" id="f_note" placeholder="לדוגמה: מרצה: ד״ר כהן">${ex?esc(ex.note||''):''}</textarea>
+        </div>`;
+      renderSlots();
+      footer.innerHTML = `<button class="btn btn-primary" onclick="saveLink()">שמירה</button><button class="btn" onclick="closeModal()">ביטול</button>`;
+    }
+    setTimeout(() => document.querySelector('#modalContent input, #modalContent select')?.focus(), 60);
+  }
+
+  function autoDetectType(val) {
+    const v = val.trim();
+    const sel = document.getElementById('f_type');
+    if (!sel) return;
+    if (/^הרצ/i.test(v) || /^lect/i.test(v)) sel.value = 'lecture';
+    else if (/^תר/i.test(v) || /^tirg/i.test(v)) sel.value = 'tirgul';
+    else if (/^סד/i.test(v) || /^sadn/i.test(v)) sel.value = 'sadna';
+  }
+
+  function selectColor(el) { document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected')); el.classList.add('selected'); }
+  function hasUnsavedData() {
+    const t = document.getElementById('f_title');
+    const u = document.getElementById('f_url');
+    return (t && t.value.trim()) || (u && u.value.trim());
+  }
+  function handleOverlayClick(e) {
+    if (e.target !== document.getElementById('modalOverlay')) return;
+    if (hasUnsavedData()) {
+      if (!confirm('יש נתונים שלא נשמרו. לצאת בלי לשמור?')) return;
+    }
+    closeModal();
+  }
+  function closeModal() { document.getElementById('modalOverlay').style.display='none'; editTarget=null; }
+
+  function saveCourse() {
+    const name = document.getElementById('f_name').value.trim();
+    if (!name) { alert('נא להזין שם קורס'); return; }
+    const color = document.querySelector('.color-dot.selected')?.dataset.color || COLORS[0];
+    if (editTarget.courseId) { const c=state.courses.find(x=>x.id===editTarget.courseId); c.name=name; c.color=color; }
+    else state.courses.push({ id:uid(), name, color, links:[] });
+    save(); closeModal(); renderList(); toast('הקורס נשמר ✓');
+  }
+
+  function saveLink() {
+    const title = document.getElementById('f_title').value.trim();
+    const url   = document.getElementById('f_url').value.trim();
+    if (!title) { alert('נא להזין כותרת'); return; }
+    if (!url)   { alert('נא להזין קישור'); return; }
+    const data = {
+      title, url,
+      type:  document.getElementById('f_type').value,
+      slots: modalSlots.filter(s => s.day || s.time),
+      room:  document.getElementById('f_room').value.trim(),
+      note:  document.getElementById('f_note').value.trim(),
+    };
+    const course = state.courses.find(c=>c.id===editTarget.courseId);
+    if (editTarget.linkId) Object.assign(course.links.find(l=>l.id===editTarget.linkId), data);
+    else { course.links.push({ id:uid(), ...data }); state.expanded[editTarget.courseId]=true; }
+    save(); closeModal();
+    if (curView==='schedule') renderSchedule(); else renderList();
+    toast('הקישור נשמר ✓');
+  }
+
+  function deleteCourse(id) {
+    if (!confirm('למחוק קורס זה וכל קישוריו?')) return;
+    state.courses=state.courses.filter(c=>c.id!==id); delete state.expanded[id];
+    save(); renderList(); toast('הקורס נמחק');
+  }
+  function deleteLink(cid, lid) {
+    if (!confirm('למחוק קישור זה?')) return;
+    state.courses.find(x=>x.id===cid).links=state.courses.find(x=>x.id===cid).links.filter(l=>l.id!==lid);
+    save(); if(curView==='schedule')renderSchedule();else renderList(); toast('הקישור נמחק');
+  }
+
+  /* ── Keyboard shortcuts ── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); return; }
+    const active = document.activeElement;
+    const inInput = active && (active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT');
+    if (e.key === '/' && !inInput && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      setView('list');
+      setTimeout(() => { const s=document.getElementById('searchInput'); if(s){s.focus();s.select();} }, 50);
+    }
+  });
+
+  /* ── Init ── */
+  load(); save(); setView('list');
+  updateNextUp();
+</script>
+</body>
+</html>
