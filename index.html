@@ -92,10 +92,12 @@
     .type-lecture { background: var(--blue-bg); }
     .type-tirgul  { background: #EAF7EE; }
     .type-sadna   { background: #FDEEF5; }
+    .type-lab     { background: #E0E7FF; }
     .type-other   { background: var(--surface2); }
     @media (prefers-color-scheme: dark) {
       .type-tirgul { background: rgba(67,160,71,0.15); }
       .type-sadna  { background: rgba(194,24,91,0.15); }
+      .type-lab    { background: rgba(67, 56, 202, 0.15); }
     }
     .link-info { flex: 1; min-width: 0; }
     .link-title { font-size: 13px; font-weight: 500; }
@@ -145,7 +147,7 @@
     table.sched thead th:first-child { width: 52px; }
     table.sched td { border: 1px solid var(--border); padding: 0; vertical-align: top; height: 56px; }
     .time-cell { text-align: center; font-size: 11px; color: var(--text3); padding-top: 7px; background: var(--surface2); font-weight: 500; }
-    /* Conflict layout: multiple events side by side */
+    /* Conflict layout */
     .td-events { display: flex; height: 100%; min-height: 54px; }
     .sched-block { display: flex; flex-direction: column; gap: 1px; flex: 1; min-height: 54px; padding: 5px 6px; text-decoration: none; transition: filter 0.12s; }
     .sched-block:hover { filter: brightness(0.9); }
@@ -160,6 +162,7 @@
     .ev-lecture { background: #1A6FD4; color: white; }
     .ev-tirgul  { background: #43A047; color: white; }
     .ev-sadna   { background: #C2185B; color: white; }
+    .ev-lab     { background: #4F46E5; color: white; }
     .ev-other   { background: #546E7A; color: white; }
     .sb-course { font-size: 12px; font-weight: 700; line-height: 1.3; color: inherit; }
     .sb-type   { font-size: 12.5px; opacity: 0.9; color: inherit; }
@@ -210,17 +213,6 @@
     .app-footer a { color: var(--text3); text-decoration: none; border-bottom: 1px solid var(--border2); }
     .app-footer a:hover { color: var(--text2); }
 
-    /* NEXT UP */
-    .nextup-now { background: #1A6FD4; color: white; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    .nextup-soon { background: #FEF3C7; color: #92400E; padding: 14px 18px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    .nextup-label { font-size: 12px; font-weight: 600; opacity: 0.8; white-space: nowrap; }
-    .nextup-name { font-size: 15px; font-weight: 700; flex: 1; }
-    .nextup-time { font-size: 13px; opacity: 0.85; white-space: nowrap; }
-    .nextup-btn { padding: 8px 18px; border-radius: 8px; border: none; font-family: 'Heebo', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-    .nextup-btn-enter { background: white; color: #1A6FD4; }
-    .nextup-btn-soon  { background: #F59E0B; color: white; }
-    @keyframes jump { 0%,100%{transform:scale(1);} 40%{transform:scale(1.08);} 70%{transform:scale(0.97);} }
-    .btn-jumping { animation: jump 0.8s ease infinite; }
     @media (max-width: 600px) {
       .brand-name { display: none; }
       .topbar-actions { gap: 4px; }
@@ -255,6 +247,13 @@
             <span>מערכת</span>
           </button>
         </div>
+        
+        <button class="btn" onclick="document.getElementById('importIcs').click()" title="ייבוא מ-CheeseFork">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 14v6m-3-3h6"/></svg>
+          <span>ייבוא ICS</span>
+        </button>
+        <input type="file" id="importIcs" accept=".ics" style="display:none" onchange="importFromICS(event)" />
+
         <button class="btn" onclick="exportData()" title="ייצוא גיבוי">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           <span>ייצוא</span>
@@ -272,12 +271,10 @@
     </div>
   </div>
 
-  <!-- NEXT UP WIDGET -->
   <div id="nextUpBar" style="display:none;margin-bottom:1rem;border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow)">
     <div id="nextUpInner"></div>
   </div>
 
-  <!-- LIST VIEW -->
   <div id="listView" style="display:none">
     <div class="search-wrap">
       <div class="search-icon">
@@ -291,17 +288,17 @@
       <div class="legend-item"><div class="legend-dot" style="background:#1A6FD4"></div>הרצאה</div>
       <div class="legend-item"><div class="legend-dot" style="background:#43A047"></div>תרגול</div>
       <div class="legend-item"><div class="legend-dot" style="background:#C2185B"></div>סדנה</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4F46E5"></div>מעבדה</div>
       <div class="legend-item"><div class="legend-dot" style="background:#546E7A"></div>אחר</div>
     </div>
     <div class="courses-list" id="coursesList"></div>
     <div class="empty-state" id="emptyState" style="display:none">
       <div class="empty-icon">📡</div>
       <h3>אין קורסים עדיין</h3>
-      <p>לחץ על "קורס חדש" כדי להתחיל לארגן את הקישורים שלך</p>
+      <p>לחץ על "קורס חדש" או ייבא מ-CheeseFork כדי להתחיל לארגן את המערכת</p>
     </div>
   </div>
 
-  <!-- SCHEDULE VIEW -->
   <div id="scheduleView" style="display:none">
     <div class="sched-top">
       <div class="legend" style="margin-bottom:0">
@@ -309,6 +306,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:#1A6FD4"></div>הרצאה</div>
         <div class="legend-item"><div class="legend-dot" style="background:#43A047"></div>תרגול</div>
         <div class="legend-item"><div class="legend-dot" style="background:#C2185B"></div>סדנה</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4F46E5"></div>מעבדה</div>
         <div class="legend-item"><div class="legend-dot" style="background:#F59E0B;border-radius:50%;width:8px;height:8px"></div>עכשיו</div>
       </div>
       <div style="display:flex;gap:6px;align-items:center">
@@ -334,10 +332,9 @@
 </div>
 
 <footer class="app-footer">
-  <p>© 2026 · <a href="https://www.linkedin.com/in/amit-gabbay-7709b2351/" target="_blank" rel="noopener">עמית גבאי</a> · כל הזכויות שמורות · שימוש אישי בלבד · הוכן בעזרת <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a></p>
+  <p>© 2026 · <a href="about.html">עמית גבאי</a> · כל הזכויות שמורות · שימוש אישי בלבד · הוכן בעזרת <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a></p>
 </footer>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" style="display:none" onclick="handleOverlayClick(event)">
   <div class="modal">
     <div class="modal-header">
@@ -365,6 +362,7 @@
     lecture: { label:'הרצאה', icon:'📖', evCls:'ev-lecture', badgeCls:'type-lecture' },
     tirgul:  { label:'תרגול',  icon:'✏️',  evCls:'ev-tirgul',  badgeCls:'type-tirgul'  },
     sadna:   { label:'סדנה',   icon:'🛠️', evCls:'ev-sadna',   badgeCls:'type-sadna'   },
+    lab:     { label:'מעבדה',  icon:'🔬', evCls:'ev-lab',     badgeCls:'type-lab'     },
     other:   { label:'אחר',    icon:'🔗',  evCls:'ev-other',   badgeCls:'type-other'   },
   };
   const SK = 'zoom_v3';
@@ -375,7 +373,7 @@
   let editTarget = null;
   let curView    = 'list';
   let mobileView = false;
-  let mobileDay  = 0; // index into usedDays
+  let mobileDay  = 0; 
 
   /* ── Storage ── */
   function load() {
@@ -384,31 +382,119 @@
       if (raw) state = JSON.parse(raw);
       if (!state.courses)  state.courses  = [];
       if (!state.expanded) state.expanded = {};
-      const oldRaw = localStorage.getItem('zoomCoursesApp_v4');
-      if (oldRaw) {
-        const old = JSON.parse(oldRaw);
-        if (old.courses) {
-          const ids = new Set(state.courses.map(c => c.id));
-          old.courses.forEach(c => { if (!ids.has(c.id)) state.courses.push(c); });
-          Object.assign(state.expanded, old.expanded || {});
-        }
-        localStorage.removeItem('zoomCoursesApp_v4');
-      }
-      state.courses.forEach(c => {
-        if (!c.links) c.links = [];
-        c.links.forEach(l => {
-          if (!l.type) l.type = 'lecture';
-          if (!l.slots) {
-            l.slots = (l.day || l.time) ? [{ day: l.day||'', time: l.time||'', duration: l.duration||0 }] : [];
-            delete l.day; delete l.time; delete l.duration;
-          }
-        });
-      });
     } catch(e) { state = { courses: [], expanded: {} }; }
   }
   function save() { try { localStorage.setItem(SK, JSON.stringify(state)); } catch(e) {} }
 
-  /* ── Export / Import ── */
+  /* ── ICS Import Logic ── */
+  function importFromICS(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const text = ev.target.result;
+      parseICSAndMerge(text);
+      e.target.value = ''; 
+    };
+    reader.readAsText(file);
+  }
+
+  function parseICSAndMerge(icsText) {
+    const lines = icsText.split(/\r?\n/);
+    let currentEvent = null;
+    const events = [];
+
+    for (let i=0; i<lines.length; i++) {
+      const line = lines[i];
+      if (line.startsWith('BEGIN:VEVENT')) {
+        currentEvent = {};
+      } else if (line.startsWith('END:VEVENT')) {
+        if (currentEvent) events.push(currentEvent);
+        currentEvent = null;
+      } else if (currentEvent) {
+        if (line.startsWith('SUMMARY;LANGUAGE=en-us:')) currentEvent.summary = line.substring(23).trim();
+        else if (line.startsWith('SUMMARY:')) currentEvent.summary = line.substring(8).trim();
+        else if (line.startsWith('LOCATION:')) currentEvent.location = line.substring(9).trim();
+        else if (line.startsWith('DESCRIPTION:')) currentEvent.description = line.substring(12).trim();
+        else if (line.startsWith('DTSTART;TZID=')) currentEvent.dtstart = line.split(':')[1].trim();
+        else if (line.startsWith('DTEND;TZID=')) currentEvent.dtend = line.split(':')[1].trim();
+        else if (line.startsWith('DTSTART:')) currentEvent.dtstart = line.substring(8).trim();
+        else if (line.startsWith('DTEND:')) currentEvent.dtend = line.substring(6).trim();
+      }
+    }
+
+    let addedCount = 0;
+    const newCoursesMap = {}; 
+
+    events.forEach(ev => {
+      if (!ev.summary || ev.summary.includes('מועד')) return; 
+
+      const parts = ev.summary.split('-');
+      const titlePart = parts[0] ? parts[0].trim() : '';
+      const courseName = parts.length > 1 ? parts.slice(1).join('-').trim() : titlePart;
+
+      let type = 'other';
+      if (/הרצ/i.test(titlePart)) type = 'lecture';
+      else if (/תרג/i.test(titlePart)) type = 'tirgul';
+      else if (/סדנ/i.test(titlePart)) type = 'sadna';
+      else if (/מעבד/i.test(titlePart)) type = 'lab';
+
+      let day = '', time = '', duration = 0;
+      if (ev.dtstart && ev.dtstart.length >= 13) {
+        const y = ev.dtstart.substring(0,4);
+        const m = ev.dtstart.substring(4,6) - 1;
+        const d = ev.dtstart.substring(6,8);
+        const hh = ev.dtstart.substring(9,11);
+        const mm = ev.dtstart.substring(11,13);
+        const dateObj = new Date(y, m, d, hh, mm);
+        day = DAY_MAP[dateObj.getDay()];
+        time = `${hh}:${mm}`;
+
+        if (ev.dtend && ev.dtend.length >= 13) {
+           const endH = parseInt(ev.dtend.substring(9,11), 10);
+           const endM = parseInt(ev.dtend.substring(11,13), 10);
+           duration = (endH*60 + endM) - (parseInt(hh,10)*60 + parseInt(mm,10));
+        }
+      }
+
+      const linkObj = {
+        id: uid(),
+        title: titlePart || 'שיעור',
+        url: '', 
+        type: type,
+        room: ev.location || '',
+        note: ev.description || '',
+        slots: (day && time) ? [{ day, time, duration: duration > 0 ? duration : 90 }] : []
+      };
+
+      if (!newCoursesMap[courseName]) {
+        let existingCourse = state.courses.find(c => c.name === courseName);
+        if (existingCourse) {
+          newCoursesMap[courseName] = existingCourse;
+        } else {
+          newCoursesMap[courseName] = {
+            id: uid(),
+            name: courseName,
+            color: COLORS[Object.keys(newCoursesMap).length % COLORS.length],
+            links: []
+          };
+          state.courses.push(newCoursesMap[courseName]);
+        }
+      }
+      newCoursesMap[courseName].links.push(linkObj);
+      addedCount++;
+    });
+
+    save();
+    if (curView === 'list') renderList(); else renderSchedule();
+    if (addedCount > 0) {
+      toast(`יובאו ${addedCount} שיעורים מ-CheeseFork ✓`);
+    } else {
+      alert("לא נמצאו שיעורים בקובץ (או שמדובר רק במועדי מבחנים).");
+    }
+  }
+
+  /* ── Export / Import JSON ── */
   function exportData() {
     const json = JSON.stringify({ version: 1, courses: state.courses }, null, 2);
     const encoded = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
@@ -450,7 +536,6 @@
     clearTimeout(t._to); t._to = setTimeout(() => t.classList.remove('show'), 2200);
   }
 
-  /* ── Password extraction ── */
   function extractPwd(url) {
     try {
       const u = new URL(url);
@@ -466,7 +551,6 @@
     });
   }
 
-  /* ── Smart icon detection ── */
   function detectIcon(url, defaultType) {
     if (!url) return TYPE[defaultType]?.icon || '🔗';
     const u = url.toLowerCase();
@@ -476,7 +560,6 @@
     return TYPE[defaultType]?.icon || '🔗';
   }
 
-  /* ── Active class detection ── */
   function isActiveNow(day, time, duration) {
     const now = new Date();
     const todayDay = DAY_MAP[now.getDay()];
@@ -488,7 +571,6 @@
     return nowMins >= startMins && nowMins < endMins;
   }
 
-  /* ── View switching ── */
   function setView(v) {
     curView = v;
     document.getElementById('listView').style.display     = v === 'list'     ? '' : 'none';
@@ -499,7 +581,6 @@
     if (v === 'schedule') renderSchedule();
   }
 
-  /* ── Mobile schedule toggle ── */
   function toggleMobileView() {
     mobileView = !mobileView;
     document.getElementById('toggleMobileBtn').textContent = mobileView ? 'כל הימים' : 'יום בודד';
@@ -561,6 +642,8 @@
     const slotsHtml = slots.length
       ? `<div class="link-slots">${slots.map(s => `<span class="link-slot-tag">📅 ${s.day}${s.time?' · '+s.time:''}${s.duration?' · '+s.duration+' דק\'':''}</span>`).join('')}</div>`
       : '';
+    const hasUrl = l.url && l.url.trim() !== '';
+    
     return `
       <div class="link-row">
         <div class="type-icon ${tm.badgeCls}">${icon}</div>
@@ -569,6 +652,7 @@
           ${slotsHtml}
           ${l.room ? `<div class="link-note">📍 ${esc(l.room)}</div>` : ''}
           ${l.note ? `<div class="link-note">${esc(l.note)}</div>` : ''}
+          ${!hasUrl ? `<div class="link-note" style="color:#F59E0B">⚠️ חסר קישור - לחץ על העיפרון לעריכה</div>` : ''}
         </div>
         <div class="link-actions">
           <button class="btn-icon" onclick="openModal('link','${cid}','${l.id}')">${SVG_EDIT}</button>
@@ -576,10 +660,11 @@
         </div>
         <div class="link-btns">
           ${pwd ? `<button class="pwd-btn" onclick="copyPwd('${esc(pwd)}')" title="העתק סיסמה">🔑 סיסמה</button>` : ''}
+          ${hasUrl ? `
           <a class="open-btn" href="${esc(l.url)}" target="_blank" rel="noopener">
             כניסה
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </a>
+          </a>` : ''}
         </div>
       </div>`;
   }
@@ -605,7 +690,6 @@
     let usedDays   = dayOrder.filter(d => allEvents.some(e => e.day === d));
     const usedTimes = [...new Set(allEvents.map(e => e.time))].sort();
 
-    // Mobile single-day mode
     if (mobileView) {
       mobileDay = Math.min(mobileDay, usedDays.length - 1);
       document.getElementById('dayNavLabel').textContent = usedDays[mobileDay] || '';
@@ -629,7 +713,6 @@
       usedDays.forEach(d => {
         const evs = grid[t][d];
         if (!evs.length) { html += `<td></td>`; return; }
-        // Conflict: multiple events side by side
         html += `<td style="padding:0"><div class="td-events">`;
         evs.forEach(ev => {
           const tm = TYPE[ev.type] || TYPE.other;
@@ -637,13 +720,16 @@
           const durClass = ev.duration >= 180 ? 'dur-180' : ev.duration >= 150 ? 'dur-150' : ev.duration >= 120 ? 'dur-120' : ev.duration >= 90 ? 'dur-90' : '';
           const durStyle = ev.duration > 180 ? `min-height:${Math.round(ev.duration/60*108)}px` : '';
           const active   = isActiveNow(ev.day, ev.time, ev.duration);
-          html += `<a class="sched-block ${tm.evCls} ${durClass} ${active?'is-active':''}" href="${esc(ev.url)}" target="_blank" rel="noopener" ${durStyle?`style="${durStyle}"`:''}>
+          
+          const hrefAttr = ev.url ? `href="${esc(ev.url)}" target="_blank" rel="noopener"` : `href="#" onclick="alert('חסר קישור לפגישה זו. ערוך אותה במסך הרשימה.'); return false;"`;
+
+          html += `<a class="sched-block ${tm.evCls} ${durClass} ${active?'is-active':''}" ${hrefAttr} ${durStyle?`style="${durStyle}"`:''}>
             <span class="sb-course">${esc(ev.courseName)}</span>
             <span class="sb-type">${icon} ${tm.label}</span>
             ${ev.room ? `<span class="sb-room">📍 ${esc(ev.room)}</span>` : ''}
             ${ev.duration ? `<span class="sb-dur">⏱ ${ev.duration} דק׳</span>` : ''}
             ${active ? `<span class="sb-now">● עכשיו</span>` : ''}
-            <span class="sb-enter">לחץ לכניסה ←</span>
+            <span class="sb-enter">${ev.url ? 'לחץ לכניסה ←' : '⚠️ חסר קישור'}</span>
           </a>`;
         });
         html += `</div></td>`;
@@ -655,7 +741,6 @@
     tbl.innerHTML = html;
   }
 
-  // Refresh every minute
   setInterval(() => {
     if (curView === 'schedule') renderSchedule();
     updateNextUp();
@@ -684,22 +769,21 @@
     const nowMins = now.getHours()*60+now.getMinutes();
     const evs = getAllEvents();
 
-    // Find current class
     const current = evs.find(e => e.day===todayHe && nowMins >= timeToMins(e.time) && nowMins < timeToMins(e.time)+e.duration);
     if (current) {
       const endMins = timeToMins(current.time)+current.duration;
       const rem = endMins-nowMins;
       bar.style.display='';
+      const btnHtml = current.url ? `<a class="nextup-btn nextup-btn-enter" href="${esc(current.url)}" target="_blank" rel="noopener">כניסה לשיעור ←</a>` : '';
       inner.innerHTML = `<div class="nextup-now">
         <span class="nextup-label">● מתקיים עכשיו</span>
         <span class="nextup-name">${esc(current.courseName)} — ${esc(current.title)}</span>
         <span class="nextup-time">נותרו ${rem} דק'</span>
-        <a class="nextup-btn nextup-btn-enter" href="${esc(current.url)}" target="_blank" rel="noopener">כניסה לשיעור ←</a>
+        ${btnHtml}
       </div>`;
       return;
     }
 
-    // Find next class today
     const todayEvs = evs.filter(e => e.day===todayHe && timeToMins(e.time) > nowMins)
       .sort((a,b) => timeToMins(a.time)-timeToMins(b.time));
     if (todayEvs.length) {
@@ -707,11 +791,12 @@
       const diff = timeToMins(next.time)-nowMins;
       const soon = diff <= 10;
       bar.style.display='';
+      const btnHtml = (soon && next.url) ? `<a class="nextup-btn nextup-btn-soon btn-jumping" href="${esc(next.url)}" target="_blank" rel="noopener">כניסה ←</a>` : '';
       inner.innerHTML = `<div class="${soon?'nextup-soon':'nextup-now'}" style="${soon?'':'opacity:0.85'}">
         <span class="nextup-label">${soon?'⏰ בקרוב':'הבא'}</span>
         <span class="nextup-name">${esc(next.courseName)} — ${esc(next.title)}</span>
         <span class="nextup-time">בשעה ${next.time} (בעוד ${diff} דק')</span>
-        ${soon ? `<a class="nextup-btn nextup-btn-soon btn-jumping" href="${esc(next.url)}" target="_blank" rel="noopener">כניסה ←</a>` : ''}
+        ${btnHtml}
       </div>`;
       return;
     }
@@ -842,6 +927,7 @@
     if (/^הרצ/i.test(v) || /^lect/i.test(v)) sel.value = 'lecture';
     else if (/^תר/i.test(v) || /^tirg/i.test(v)) sel.value = 'tirgul';
     else if (/^סד/i.test(v) || /^sadn/i.test(v)) sel.value = 'sadna';
+    else if (/^מעב/i.test(v) || /^lab/i.test(v)) sel.value = 'lab';
   }
 
   function selectColor(el) { document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected')); el.classList.add('selected'); }
@@ -872,7 +958,6 @@
     const title = document.getElementById('f_title').value.trim();
     const url   = document.getElementById('f_url').value.trim();
     if (!title) { alert('נא להזין כותרת'); return; }
-    if (!url)   { alert('נא להזין קישור'); return; }
     const data = {
       title, url,
       type:  document.getElementById('f_type').value,
@@ -914,6 +999,8 @@
   /* ── Init ── */
   load(); save(); setView('list');
   updateNextUp();
+  console.log("%cMeetLink", "color: #1A6FD4; font-size: 24px; font-weight: bold;");
+  console.log("%cCreated by Amit Gabbay © 2026", "font-size: 14px;");
 </script>
 </body>
 </html>
