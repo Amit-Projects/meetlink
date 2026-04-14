@@ -453,26 +453,35 @@
   }
 
   /* ── ICS Import ── */
+  // Parses the CheeseFork/standard summary into { typePrefix, courseName }.
+  // CheeseFork format: "<type words> <section_number> - <course name>"
+  // Simple format:     "<type> - <course name>"  or  "<course name> - <type>"
+  function parseSummary(summary) {
+    // CheeseFork: "<words> <digits_only> - <rest>" — section number pattern
+    const m = summary.match(/^(.+?)\s+(\d+)\s*-\s*(.+)$/);
+    if (m) return { typePrefix: m[1].trim(), courseName: m[3].trim() };
+    // Simple separator patterns
+    const typeRe = /^(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)/i;
+    const parts  = summary.split(/\s*[-–|]\s*/);
+    if (parts.length > 1) {
+      if (typeRe.test(parts[0])) return { typePrefix: parts[0].trim(), courseName: parts.slice(1).join(' - ').trim() };
+      if (typeRe.test(parts[parts.length - 1])) return { typePrefix: parts[parts.length - 1].trim(), courseName: parts.slice(0, -1).join(' - ').trim() };
+    }
+    return { typePrefix: null, courseName: summary.trim() };
+  }
+
   function detectTypeFromSummary(summary) {
-    if (/מעבדה|lab/i.test(summary)) return 'mabada';
-    if (/הרצא|lecture|lect/i.test(summary)) return 'lecture';
-    if (/תרגול|tirgul|tirg/i.test(summary)) return 'tirgul';
-    if (/סדנה|sadna|workshop/i.test(summary)) return 'sadna';
+    const { typePrefix } = parseSummary(summary);
+    const check = typePrefix || summary;
+    if (/מעבדה|lab/i.test(check)) return 'mabada';
+    if (/הרצא|lecture|lect/i.test(check)) return 'lecture';
+    if (/תרגול|tirgul|tirg/i.test(check)) return 'tirgul';
+    if (/סדנה|sadna|workshop/i.test(check)) return 'sadna';
     return 'other';
   }
 
   function extractCourseName(summary) {
-    // Strip known type keywords and surrounding separators
-    const stripped = summary.replace(/\s*[-–|]\s*(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)\s*$/i, '').trim();
-    if (stripped && stripped !== summary) return stripped;
-    // Try splitting on separator and checking each part
-    const parts = summary.split(/\s*[-–|:]\s*/);
-    if (parts.length > 1) {
-      const typeRe = /^(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)/i;
-      if (typeRe.test(parts[parts.length - 1])) return parts.slice(0, -1).join(' - ').trim();
-      if (typeRe.test(parts[0])) return parts.slice(1).join(' - ').trim();
-    }
-    return summary.trim();
+    return parseSummary(summary).courseName;
   }
 
   function importICS(e) {
@@ -537,9 +546,9 @@
 
         if (!groups.has(summary)) {
           const type       = detectTypeFromSummary(summary);
-          const courseName = extractCourseName(summary);
-          const title      = (type !== 'other') ? TYPE[type].label : summary;
-          groups.set(summary, { courseName, type, title, url, location: location || '', slots: new Map() });
+          const { typePrefix, courseName } = parseSummary(summary);
+          const title      = (type !== 'other') ? TYPE[type].label : (typePrefix || summary);
+          groups.set(summary, { courseName, type, title, url, location: location || '', description: description || '', slots: new Map() });
         }
 
         const g = groups.get(summary);
@@ -569,7 +578,7 @@
         links.forEach(g => {
           const exists = course.links.find(l => l.type === g.type && l.title === g.title);
           if (!exists) {
-            course.links.push({ id: uid(), title: g.title, url: g.url, type: g.type, slots: [...g.slots.values()], room: g.location, note: '' });
+            course.links.push({ id: uid(), title: g.title, url: g.url, type: g.type, slots: [...g.slots.values()], room: g.location, note: g.description });
             addedLinks++;
           }
         });
@@ -949,8 +958,8 @@
           <input class="form-control" id="f_title" value="${ex?esc(ex.title):''}" placeholder="לדוגמה: הרצאה שבועית" oninput="autoDetectType(this.value)" />
         </div>
         <div class="form-group">
-          <label>קישור</label>
-          <input class="form-control" id="f_url" type="url" value="${ex?esc(ex.url):''}" placeholder="https://zoom.us/j/... או Panopto / YouTube" />
+          <label>קישור <span style="font-weight:400;color:var(--text3)">(אופציונלי)</span></label>
+          <input class="form-control" id="f_url" type="url" value="${ex?esc(ex.url||''):''}" placeholder="https://zoom.us/j/... או Panopto / YouTube" />
         </div>
         <div class="form-group">
           <label>סוג שיעור</label>
@@ -1017,7 +1026,6 @@
     const title = document.getElementById('f_title').value.trim();
     const url   = document.getElementById('f_url').value.trim();
     if (!title) { alert('נא להזין כותרת'); return; }
-    if (!url)   { alert('נא להזין קישור'); return; }
     const data = {
       title, url,
       type:  document.getElementById('f_type').value,
