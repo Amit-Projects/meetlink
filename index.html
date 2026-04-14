@@ -453,6 +453,9 @@
   }
 
   /* ── ICS Import ── */
+  // Matches known session-type prefixes
+  const ICS_TYPE_RE = /^(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)/i;
+
   // Parses the CheeseFork/standard summary into { typePrefix, courseName }.
   // CheeseFork format: "<type words> <section_number> - <course name>"
   // Simple format:     "<type> - <course name>"  or  "<course name> - <type>"
@@ -461,11 +464,10 @@
     const m = summary.match(/^(.+?)\s+(\d+)\s*-\s*(.+)$/);
     if (m) return { typePrefix: m[1].trim(), courseName: m[3].trim() };
     // Simple separator patterns
-    const typeRe = /^(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)/i;
     const parts  = summary.split(/\s*[-–|]\s*/);
     if (parts.length > 1) {
-      if (typeRe.test(parts[0])) return { typePrefix: parts[0].trim(), courseName: parts.slice(1).join(' - ').trim() };
-      if (typeRe.test(parts[parts.length - 1])) return { typePrefix: parts[parts.length - 1].trim(), courseName: parts.slice(0, -1).join(' - ').trim() };
+      if (ICS_TYPE_RE.test(parts[0])) return { typePrefix: parts[0].trim(), courseName: parts.slice(1).join(' - ').trim() };
+      if (ICS_TYPE_RE.test(parts[parts.length - 1])) return { typePrefix: parts[parts.length - 1].trim(), courseName: parts.slice(0, -1).join(' - ').trim() };
     }
     return { typePrefix: null, courseName: summary.trim() };
   }
@@ -482,6 +484,11 @@
 
   function extractCourseName(summary) {
     return parseSummary(summary).courseName;
+  }
+
+  function deriveLinkTitle(type, typePrefix, summary) {
+    if (type !== 'other') return TYPE[type].label;
+    return typePrefix || summary;
   }
 
   function importICS(e) {
@@ -545,9 +552,9 @@
         const url = urlMatch ? urlMatch[0].replace(/[>)\]]+$/, '') : '';
 
         if (!groups.has(summary)) {
-          const type       = detectTypeFromSummary(summary);
+          const type                    = detectTypeFromSummary(summary);
           const { typePrefix, courseName } = parseSummary(summary);
-          const title      = (type !== 'other') ? TYPE[type].label : (typePrefix || summary);
+          const title                   = deriveLinkTitle(type, typePrefix, summary);
           groups.set(summary, { courseName, type, title, url, location: location || '', description: description || '', slots: new Map() });
         }
 
@@ -576,9 +583,15 @@
           addedCourses++;
         }
         links.forEach(g => {
-          const exists = course.links.find(l => l.type === g.type && l.title === g.title);
-          if (!exists) {
-            course.links.push({ id: uid(), title: g.title, url: g.url, type: g.type, slots: [...g.slots.values()], room: g.location, note: g.description });
+          const newSlots = [...g.slots.values()];
+          const existingSlotKeys = new Set(
+            course.links
+              .filter(l => l.type === g.type && l.title === g.title)
+              .flatMap(l => (l.slots || []).map(s => `${s.day}|${s.time}`))
+          );
+          const allCovered = newSlots.length > 0 && newSlots.every(s => existingSlotKeys.has(`${s.day}|${s.time}`));
+          if (!allCovered) {
+            course.links.push({ id: uid(), title: g.title, url: g.url, type: g.type, slots: newSlots, room: g.location, note: g.description });
             addedLinks++;
           }
         });
