@@ -463,7 +463,7 @@
 
   function extractCourseName(summary) {
     // Strip known type keywords and surrounding separators
-    const stripped = summary.replace(/\s*[-–|]\s*(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)(?:\s+\S+)?\s*$/i, '').trim();
+    const stripped = summary.replace(/\s*[-–|]\s*(?:הרצאה|תרגול|סדנה|מעבדה|lecture|tirgul|sadna|lab|workshop)\s*$/i, '').trim();
     if (stripped && stripped !== summary) return stripped;
     // Try splitting on separator and checking each part
     const parts = summary.split(/\s*[-–|:]\s*/);
@@ -491,7 +491,7 @@
       const getField = (block, key) => {
         const re = new RegExp(`^${key}(?:;[^:\n]*)?:([^\n]*)`, 'mi');
         const m = block.match(re);
-        return m ? m[1].trim().replace(/\\n/g, '\n').replace(/\\,/g, ',').replace(/\\\\/g, '\\') : '';
+        return m ? m[1].trim().replace(/\\\\/g, '\\').replace(/\\n/g, '\n').replace(/\\,/g, ',') : '';
       };
 
       // Map: summary → { courseName, type, title, url, location, slots: Map }
@@ -531,9 +531,9 @@
           duration = Math.round((endDate - startDate) / 60000);
         }
 
-        // Extract first URL from description or location
+        // Extract first URL from description or location; trim only wrapping chars that can't appear in URLs
         const urlMatch = (description + ' ' + location).match(/https?:\/\/\S+/);
-        const url = urlMatch ? urlMatch[0].replace(/[,;>)\]]+$/, '') : '';
+        const url = urlMatch ? urlMatch[0].replace(/[>)\]]+$/, '') : '';
 
         if (!groups.has(summary)) {
           const type       = detectTypeFromSummary(summary);
